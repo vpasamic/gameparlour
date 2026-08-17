@@ -1,12 +1,26 @@
 {
-  "last_run": "2026-08-17T18:24:28.280538+00:00",
+  "last_run": "2026-08-17T19:06:52.953947+00:00",
   "seen": {
+    "2fbf47a03fd0a85b": {
+      "detail": "",
+      "first_seen": "2026-08-17T19:06:52.953947+00:00",
+      "source": "Gamescape SF \u2014 Events",
+      "title": "One Piece Card Game Store Tournament 2026 Vol.3 - 8/16/26",
+      "url": "https://www.gamescapesf.store/events"
+    },
     "d889c14b67d86522": {
       "detail": "",
       "first_seen": "2026-08-17T16:56:45.429589+00:00",
       "source": "Game Parlour \u2014 Gaming Events",
       "title": "8/20 (Thurs) 630pm - One Piece Tournament (Constructed) $12.00 Out of stock",
       "url": "https://thegameparloursf.square.site/product/8-20-thurs-630pm-one-piece-tournament-constructed-/FERPEOGYTLXOLUR5AUWLOVZ4?cp=true&sa=false&sbp=false&q=false&category_id=23"
+    },
+    "e7e60a1808fcbf05": {
+      "detail": "",
+      "first_seen": "2026-08-17T19:06:52.953947+00:00",
+      "source": "Game Parlour \u2014 Gaming Events",
+      "title": "8/27 (Thurs) 6pm - One Piece OP-17 Release Event $35.00 Out of stock",
+      "url": "https://thegameparloursf.square.site/product/8-27-thurs-6pm-one-piece-op-17-release-event/XMMKLTZ5NVBIQHWKP2YZZUD5?cp=true&sa=false&sbp=false&q=false&category_id=23"
     }
   }
 }
