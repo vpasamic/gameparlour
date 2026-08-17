@@ -3,7 +3,7 @@ name: One Piece event watch
 
 on:
   schedule:
-    - cron: "0 * * * *"        # hourly, UTC
+    - cron: "*/15 * * * *"     # every 15 min (:00 :15 :30 :45), UTC
   workflow_dispatch:
     inputs:
       mode:
@@ -20,6 +20,11 @@ on:
 permissions:
   contents: write
 
+# Stops two runs racing to push seen_events.json
+concurrency:
+  group: event-watch
+  cancel-in-progress: false
+
 jobs:
   watch:
     runs-on: ubuntu-latest
@@ -35,6 +40,12 @@ jobs:
         with:
           path: ~/.cache/pip
           key: pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Cache Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('requirements.txt') }}
 
       - name: Install dependencies
         run: |
