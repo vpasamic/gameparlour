@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 
 from __future__ import annotations
 
@@ -23,6 +24,14 @@ from bs4 import BeautifulSoup
 
 SOURCES = [
     # (label, url, fetch_mode)
+
+    # Gamescape SF, 333 Divisadero. Their main site (gamescapesf.com) is only
+    # a landing page — real listings live on the Square Online web-store.
+    ("Gamescape SF — Events",
+     "https://www.gamescapesf.store/events",
+     "render"),
+
+    # Game Parlour, 1342 Irving St.
     ("Game Parlour — Event Calendar",
      "https://thegameparloursf.square.site/shop/event-calendar/23",
      "render"),
@@ -225,9 +234,13 @@ def post_discord(webhook: str, content: str, embeds: list[dict] | None = None,
 
 
 def notify(webhook: str, events: list[Event], role_id: str | None) -> None:
-    mention = f"<@&{role_id}> " if role_id else ""
+    mention = f"<@&{clean_role_id(role_id)}> " if clean_role_id(role_id) else ""
     plural = "event" if len(events) == 1 else "events"
-    header = f"{mention}🏴‍☠️ **{len(events)} new One Piece {plural}** at The Game Parlour"
+
+    # Name the stores involved rather than hardcoding one.
+    stores = sorted({e.source.split("—")[0].strip() for e in events})
+    where = ", ".join(stores)
+    header = f"{mention}🏴‍☠️ **{len(events)} new One Piece {plural}** at {where}"
 
     embeds = [{
         "title": e.title[:250],
