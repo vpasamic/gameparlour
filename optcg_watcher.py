@@ -57,13 +57,17 @@ SOURCES = [
      "render"),
 ]
 
-# Case-insensitive. Add "treasure cup", "flagship", "east blue" if you want
-# broader coverage — they'll catch OP events that don't say "One Piece", but
-# may also catch other games' events.
+# Case-insensitive (the regex compiles with re.IGNORECASE), so "one piece",
+# "One Piece", "OP TCG" and "op tcg" are all handled by the same patterns.
+#
+# The last pattern matches a standalone "OP". It uses a lookbehind/lookahead
+# for hyphens instead of plain \b, because \bop\b would also fire on the "op"
+# in "Co-op Board Game Night" — which a board game cafe definitely runs.
 KEYWORDS = [
     r"one\s*piece",
     r"\bop\s*tcg\b",
     r"\boptcg\b",
+    r"(?<![-\w])op(?![-\w])",
 ]
 
 USER_AGENT = (
@@ -206,21 +210,43 @@ def save_state(state: dict) -> None:
 # Discord
 # --------------------------------------------------------------------------
 
+def clean_role_id(role_id: str | None) -> str | None:
+    """Discord role IDs are 17-20 digit snowflakes. Anything else breaks the API."""
+    if not role_id:
+        return None
+    rid = role_id.strip().strip("<>@&")
+    if rid.isdigit() and 17 <= len(rid) <= 20:
+        return rid
+    print(f"[warn] DISCORD_ROLE_ID is not a valid role ID (got {len(rid)} chars); "
+          "ignoring it. Enable Developer Mode in Discord, right-click the role, "
+          "Copy ID.", file=sys.stderr)
+    return None
+
+
 def post_discord(webhook: str, content: str, embeds: list[dict] | None = None,
                  role_id: str | None = None) -> None:
+    rid = clean_role_id(role_id)
     payload = {
         "content": content,
         "username": "Grand Line Watch",
-        "allowed_mentions": {"roles": [role_id] if role_id else [], "parse": []},
+        "allowed_mentions": {"roles": [rid] if rid else [], "parse": []},
     }
     if embeds:
-        payload["embeds"] = embeds[:10]  # Discord caps embeds at 10 per message
+        # Discord rejects null fields, so drop any key whose value is None.
+        payload["embeds"] = [{k: v for k, v in e.items() if v is not None}
+                             for e in embeds[:10]]
 
-    resp = requests.post(webhook, json=payload, timeout=15)
+    resp = requests.post(webhook.strip(), json=payload, timeout=15)
     if resp.status_code == 429:
         retry = resp.json().get("retry_after", 5)
         time.sleep(float(retry) + 0.5)
-        resp = requests.post(webhook, json=payload, timeout=15)
+        resp = requests.post(webhook.strip(), json=payload, timeout=15)
+
+    if not resp.ok:
+        # Discord's body explains exactly which field it disliked. Print it,
+        # otherwise you just get an opaque "400 Bad Request".
+        print(f"[error] Discord returned {resp.status_code}: {resp.text[:800]}",
+              file=sys.stderr)
     resp.raise_for_status()
 
 
