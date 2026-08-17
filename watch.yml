@@ -1,0 +1,40 @@
+# Save as .github/workflows/watch.yml in a GitHub repo.
+# Runs hourly, commits seen_events.json back so state persists between runs.
+name: One Piece event watch
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # top of every hour, UTC
+  workflow_dispatch:       # lets you trigger it manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Check for new events
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_ROLE_ID: ${{ secrets.DISCORD_ROLE_ID }}
+        run: python optcg_watcher.py --once
+
+      - name: Persist state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen_events.json
+          git diff --staged --quiet || git commit -m "update seen events"
+          git push
