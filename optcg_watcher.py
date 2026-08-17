@@ -1,30 +1,4 @@
-#!/usr/bin/env python3
-"""
-optcg_watcher.py
-================
-Watches The Game Parlour's event calendar (and any other pages you add) for
-One Piece TCG events, and pings a Discord webhook when a *new* one appears.
-
-The Game Parlour runs its event calendar on Square Online, which renders its
-product grid with JavaScript. So this script has two fetch modes:
-
-  * "http"     - plain requests. Fast. Works if the page ships server-side HTML.
-  * "render"   - Playwright headless Chromium. Slower but handles JS pages.
-                 This is the default for square.site sources.
-
-Usage
------
-    python optcg_watcher.py --once            # one pass, notify on new events
-    python optcg_watcher.py --loop 1800       # poll every 30 min
-    python optcg_watcher.py --dump            # print what it scraped, no ping
-    python optcg_watcher.py --test-webhook    # verify the Discord side works
-    python optcg_watcher.py --once --prime    # record current events, don't ping
-
-Config via environment variables (or a .env-style export):
-    DISCORD_WEBHOOK_URL   required
-    DISCORD_ROLE_ID       optional, pings <@&ROLE_ID> on new events
-    STATE_FILE            optional, default ./seen_events.json
-"""
+#!/usr/bin/env python
 
 from __future__ import annotations
 
