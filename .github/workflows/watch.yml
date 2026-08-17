@@ -1,0 +1,64 @@
+# .github/workflows/watch.yml
+name: One Piece event watch
+
+on:
+  schedule:
+    - cron: "0 * * * *"        # hourly, UTC
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "What to run"
+        required: true
+        default: normal
+        type: choice
+        options:
+          - normal              # check and ping on new events
+          - prime               # record current events WITHOUT pinging
+          - dump                # print what was scraped, send nothing
+          - test-webhook        # send a test ping to confirm Discord works
+
+permissions:
+  contents: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Run watcher
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_ROLE_ID: ${{ secrets.DISCORD_ROLE_ID }}
+          MODE: ${{ inputs.mode || 'normal' }}
+        run: |
+          case "$MODE" in
+            prime)        python optcg_watcher.py --once --prime ;;
+            dump)         python optcg_watcher.py --dump ;;
+            test-webhook) python optcg_watcher.py --test-webhook ;;
+            *)            python optcg_watcher.py --once ;;
+          esac
+
+      - name: Persist state
+        if: ${{ inputs.mode != 'dump' && inputs.mode != 'test-webhook' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen_events.json
+          git diff --staged --quiet || git commit -m "update seen events"
+          git push
